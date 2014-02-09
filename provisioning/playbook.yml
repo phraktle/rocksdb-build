@@ -1,0 +1,5 @@
+---
+- name: build for RocksDB
+  hosts: rocksdb
+  roles:
+  - rocksdb

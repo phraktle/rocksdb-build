@@ -1,0 +1,10 @@
+---
+rocksdb_version: 2.7.fb
+rocksdb_user: rocksdb
+rocksdb_user_home: /home/rocksdb
+rocksdb_tests: no
+rocksdb_path: "{{ rocksdb_user_home }}/rocksdb/{{ rocksdb_version }}"
+
+rocksdbjni_version: master
+rocksdbjni_path: "{{ rocksdb_user_home }}/rocksdbjni/{{ rocksdbjni_version }}"
+

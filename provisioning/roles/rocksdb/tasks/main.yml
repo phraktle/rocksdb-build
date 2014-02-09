@@ -1,0 +1,49 @@
+---
+- name: install rocksdb dependencies
+  apt: pkg={{ item }}
+  with_items:
+    - git
+    - gcc-4.7-base
+    - libgflags-dev
+    - libsnappy-dev
+    - zlib1g-dev
+    - libbz2-dev
+
+- name: create rocksdb user
+  user: >
+    name={{ rocksdb_user }}
+    home={{ rocksdb_user_home }}
+    shell="/bin/bash"
+
+- name: make rocksdb dir
+  sudo_user: "{{ rocksdb_user }}"
+  file: >
+    state=directory
+    path={{ rocksdb_path }}
+
+- name: clone rocksdb repo
+  sudo_user: "{{ rocksdb_user }}"
+  git: >
+    repo=https://github.com/facebook/rocksdb.git
+    dest={{ rocksdb_path }}
+    version={{ rocksdb_version }}
+
+- name: make rocksdb
+  environment:
+    # PIC needed for rocksdbjni
+    CC: "gcc -fPIC"
+    CXX: "g++ -fPIC"
+  sudo_user: "{{ rocksdb_user }}"
+  command: >
+    chdir={{ rocksdb_path }}
+    make
+
+- name: run rocksdb tests
+  sudo_user: "{{ rocksdb_user }}"
+  when: rocksdb_tests
+  command: >
+    chdir={{ rocksdb_path }}
+    make check
+
+- include: rocksdbjni.yml
+
