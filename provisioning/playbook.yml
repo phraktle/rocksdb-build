@@ -3,3 +3,6 @@
   hosts: rocksdb
   roles:
   - rocksdb
+  - rocksdbjni
+  vars_files:
+    - vars/main.yml

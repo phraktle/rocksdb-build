@@ -1,0 +1,10 @@
+---
+rocksdb_version: 2.7.fb
+rocksdb_home: "{{ ansible_env.HOME }}"
+rocksdb_base: "{{ rocksdb_home }}/rocksdb-build"
+rocksdb_tests: no
+rocksdb_path: "{{ rocksdb_base }}/rocksdb/{{ rocksdb_version }}"
+
+rocksdbjni_version: master
+rocksdbjni_path: "{{ rocksdb_base }}/rocksdbjni/{{ rocksdbjni_version }}"
+

@@ -13,7 +13,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ansible.groups = { "rocksdb" => ["default"] }
     ansible.verbose = ''
     ansible.host_key_checking = false
-    ansible.sudo = true
+    ansible.sudo = false
   end
 
   config.vm.provider :virtualbox do |vb|

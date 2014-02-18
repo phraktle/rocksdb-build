@@ -1,49 +1,63 @@
 ---
+
+- name: install gcc 4.7
+  when: ansible_distribution == 'MacOSX'
+  homebrew: name=gcc47 install_options="cc=llvm-gcc"
+
 - name: install rocksdb dependencies
+  when: ansible_distribution == 'MacOSX'
+  homebrew: name=snappy
+  # FIXME: gflags install
+
+
+- name: install rocksdb dependencies
+  when: ansible_distribution == 'Ubuntu'
+  sudo: true
   apt: pkg={{ item }}
   with_items:
     - git
-    - gcc-4.7-base
+    - g++-4.7
     - libgflags-dev
     - libsnappy-dev
     - zlib1g-dev
     - libbz2-dev
 
-- name: create rocksdb user
-  user: >
-    name={{ rocksdb_user }}
-    home={{ rocksdb_user_home }}
-    shell="/bin/bash"
 
 - name: make rocksdb dir
-  sudo_user: "{{ rocksdb_user }}"
   file: >
     state=directory
     path={{ rocksdb_path }}
 
 - name: clone rocksdb repo
-  sudo_user: "{{ rocksdb_user }}"
   git: >
     repo=https://github.com/facebook/rocksdb.git
     dest={{ rocksdb_path }}
     version={{ rocksdb_version }}
 
-- name: make rocksdb
+- name: make rocksdb on MacOSX
+  when: ansible_distribution == 'MacOSX'
   environment:
     # PIC needed for rocksdbjni
-    CC: "gcc -fPIC"
-    CXX: "g++ -fPIC"
-  sudo_user: "{{ rocksdb_user }}"
-  command: >
+    CC: "gcc-4.7 -fPIC"
+    CXX: "g++-4.7 -fPIC"
+    LIBRARY_PATH: /usr/local/lib
+    CPATH: /usr/local/include
+  shell: >
     chdir={{ rocksdb_path }}
-    make
+    make clean ; make
+
+- name: make rocksdb on Ubuntu
+  when: ansible_distribution == 'Ubuntu'
+  environment:
+    # PIC needed for rocksdbjni
+    CC: "gcc-4.7 -fPIC"
+    CXX: "g++-4.7 -fPIC"
+  shell: >
+    chdir={{ rocksdb_path }}
+    make clean ; make
 
 - name: run rocksdb tests
-  sudo_user: "{{ rocksdb_user }}"
   when: rocksdb_tests
   command: >
     chdir={{ rocksdb_path }}
     make check
-
-- include: rocksdbjni.yml
-

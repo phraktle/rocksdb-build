@@ -1,5 +1,12 @@
 ---
 - name: install rocksdbjni dependencies
+  when: ansible_distribution == 'MacOSX'
+  homebrew: name=maven
+  # FIXME: we assume java 7 was installed and JAVA_HOME is set
+
+- name: install rocksdbjni dependencies
+  when: ansible_distribution == 'Ubuntu'
+  sudo: true
   apt: pkg={{ item }}
   with_items:
     - openjdk-7-jdk
@@ -8,30 +15,39 @@
     - libtool
 
 - name: make rocksdbjni dir
-  sudo_user: "{{ rocksdb_user }}"
   file: >
     state=directory
     path={{ rocksdbjni_path }}
 
 - name: clone rocksdbjni repo
-  sudo_user: "{{ rocksdb_user }}"
   git: >
     repo=https://github.com/fusesource/rocksdbjni.git
     dest={{ rocksdbjni_path }}
     version={{ rocksdbjni_version }}
 
 - name: build rocksdbjni
-  sudo_user: "{{ rocksdb_user }}"
   command: >
     chdir={{ rocksdbjni_path }}
     mvn clean install
 
 - name: build rocksdbjni-linux64
-  sudo_user: "{{ rocksdb_user }}"
+  when: ansible_distribution == 'Ubuntu'
   environment:
     ROCKSDB_HOME: "{{ rocksdb_path }}"
     SNAPPY_HOME: "/usr/include/"
-    JAVA_HOME: "/usr/lib/jvm/java-7-openjdk-amd64/"
+    JAVA_HOME: "/usr/lib/jvm/java-7-openjdk-amd64"
   command: >
     chdir={{ rocksdbjni_path }}/rocksdbjni-linux64
     mvn clean install {{ '-DskipTests=true' if not rocksdb_tests else '' }}
+
+- name: build rocksdbjni-osx
+  when: ansible_distribution == 'MacOSX'
+  environment:
+    ROCKSDB_HOME: "{{ rocksdb_path }}"
+    SNAPPY_HOME: "/usr/local/Cellar/snappy/1.1.1/include/"
+    CC: gcc-4.7
+    CXX: g++-4.7
+  command: >
+    chdir={{ rocksdbjni_path }}/rocksdbjni-osx
+    mvn clean install {{ '-DskipTests=true' if not rocksdb_tests else '' }}
+
